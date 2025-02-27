@@ -117,12 +117,12 @@ public:
 	{
 		title = "Vulkan Example - Basic indexed triangle";
 		// To keep things simple, we don't use the UI overlay from the framework
-		settings.overlay = false;
+		settings.overlay = true;
 		// Setup a default look-at camera
 		camera.type = Camera::CameraType::lookat;
 		camera.setPosition(glm::vec3(0.0f, 0.0f, -2.5f));
-		camera.setRotation(glm::vec3(0.0f));
-		camera.setPerspective(60.0f, (float)width / (float)height, 1.0f, 256.0f);
+		camera.setRotation(glm::vec3(0.0f, 0.0f, 180.0f)); // 欧拉角 (pitch, yaw, roll)：
+		camera.setPerspective(90.0f, (float)width / (float)height, 1.0f, 256.0f);
 		// Values not set here are initialized in the base class constructor
 	}
 
@@ -211,7 +211,7 @@ public:
 		// Allocate one command buffer per max. concurrent frame from above pool
 		VkCommandBufferAllocateInfo cmdBufAllocateInfo = vks::initializers::commandBufferAllocateInfo(commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, MAX_CONCURRENT_FRAMES);
 		VK_CHECK_RESULT(vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, commandBuffers.data()));
-	}
+	}  
 
 	// Prepare vertex and index buffers for an indexed triangle
 	// Also uploads them to device local memory using staging and initializes vertex input and attribute binding to match the vertex shader
@@ -222,15 +222,41 @@ public:
 		//	what should be done a real-world application, where you should allocate large chunks of memory at once instead.
 
 		// Setup vertices
-		std::vector<Vertex> vertexBuffer{
-			{ {  1.0f,  1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
-			{ { -1.0f,  1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
-			{ {  0.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
-		};
+		//std::vector<Vertex> vertexBuffer{
+		//	{ {  1.0f,  1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
+		//	{ { -1.0f,  1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
+		//	{ {  0.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
+		//};
+		std::vector<Vertex> vertexBuffer;
+		vertexBuffer.reserve(10000); // 预分配空间
+		for (int i = 0; i < 10000; ++i) {
+			float t = 2.0f * M_PI * i / 1000; // 参数 t 从 0 到 2π
+			float x = 16.0f * std::pow(std::sin(t), 3); // 心形 x 坐标
+			float y = 13.0f * std::cos(t) - 5.0f * std::cos(2.0f * t) - 2.0f * std::cos(3.0f * t) - std::cos(4.0f * t); // 心形 y 坐标
+
+			// 归一化坐标到 [-1, 1] 范围
+			x /= 20.0f;
+			y /= 20.0f;
+
+			// 设置顶点颜色为红色
+			Vertex vertex = {
+				{ x, y, 0.0f }, // 位置
+				{ 1.0f, 0.0f, 0.0f } // 颜色
+			};
+			vertexBuffer.push_back(vertex);
+		}
+
 		uint32_t vertexBufferSize = static_cast<uint32_t>(vertexBuffer.size()) * sizeof(Vertex);
 
 		// Setup indices
-		std::vector<uint32_t> indexBuffer{ 0, 1, 2 };
+		//std::vector<uint32_t> indexBuffer{ 0, 1, 2 };
+		std::vector<uint32_t> indexBuffer;
+		for (uint32_t i = 0; i < vertexBufferSize - 2; ++i) {
+			indexBuffer.push_back(0);  // 中心点
+			indexBuffer.push_back(i + 1);
+			indexBuffer.push_back(i + 2);
+		}
+
 		indices.count = static_cast<uint32_t>(indexBuffer.size());
 		uint32_t indexBufferSize = indices.count * sizeof(uint32_t);
 

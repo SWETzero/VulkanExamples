@@ -95,6 +95,7 @@ protected:
 	// Returns the path to the root of the glsl, hlsl or slang shader directory.
 	std::string getShadersPath() const;
 
+
 	// Frame counter to display fps
 	uint32_t frameCounter = 0;
 	uint32_t lastFPS = 0;
